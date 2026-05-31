@@ -187,14 +187,6 @@ export function LifeplanForm({
             }
             suffix="歳"
           />
-          <PercentField
-            label="物価上昇率（支出の増加）"
-            value={state.assumptions.inflationRate}
-            onChange={(v) =>
-              setState((s) => ({ ...s, assumptions: { ...s.assumptions, inflationRate: v } }))
-            }
-            help="未設定なら0%。例: 1%"
-          />
         </div>
       </Card>
 
@@ -235,17 +227,23 @@ export function LifeplanForm({
               placeholder="項目名"
               onChange={(e) => patchExpense(exp.id, { label: e.target.value })}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-x-3">
               <NumberField label="年額" value={exp.annualAmount} onChange={(v) => patchExpense(exp.id, { annualAmount: v })} suffix="円" step={100000} />
               <SelectField label="分類" value={exp.category} options={EXPENSE_CATEGORIES} onChange={(v) => patchExpense(exp.id, { category: v })} />
               <NumberField label="終了年齢(任意)" value={exp.endAge ?? state.assumptions.endAge} onChange={(v) => patchExpense(exp.id, { endAge: v })} suffix="歳" />
+              <PercentField
+                label="物価上昇率"
+                value={exp.growthRate ?? 0}
+                onChange={(v) => patchExpense(exp.id, { growthRate: v })}
+                help="毎年の増加率。0%なら据え置き。"
+              />
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("expenses", exp.id)}>削除</Button>
               </div>
             </div>
           </div>
         ))}
-        <Button variant="secondary" onClick={() => setState((s) => ({ ...s, expenses: [...s.expenses, { id: uid(), label: "新しい支出", category: "living", annualAmount: 0 }] }))}>＋ 支出を追加</Button>
+        <Button variant="secondary" onClick={() => setState((s) => ({ ...s, expenses: [...s.expenses, { id: uid(), label: "新しい支出", category: "living", annualAmount: 0, growthRate: 0 }] }))}>＋ 支出を追加</Button>
       </Card>
 
       <Card title="④ 保有資産">

@@ -87,17 +87,17 @@ describe("projectCashflow", () => {
     expect(result.rows[2].balance).toBe(10_000_000);
   });
 
-  it("インフレ率2%で支出が複利的に増える", () => {
+  it("物価上昇率2%で支出が複利的に増える", () => {
     const state = baseState({
-      assumptions: {
-        currentYear: 2025,
-        endAge: 36,
-        inflationRate: 0.02,
-        salaryGrowthRate: 0,
-      },
       incomes: [],
       expenses: [
-        { id: "e1", label: "生活費", category: "living", annualAmount: 1_000_000 },
+        {
+          id: "e1",
+          label: "生活費",
+          category: "living",
+          annualAmount: 1_000_000,
+          growthRate: 0.02,
+        },
       ],
       assets: [{ id: "a1", label: "預金", balance: 10_000_000 }],
     });
@@ -106,6 +106,21 @@ describe("projectCashflow", () => {
     // 35歳の支出は100万（初年は上昇なし）、36歳は102万
     expect(result.rows[0].expense).toBe(1_000_000);
     expect(result.rows[1].expense).toBe(1_020_000);
+  });
+
+  it("物価上昇率未指定の支出は据え置き", () => {
+    const state = baseState({
+      incomes: [],
+      expenses: [
+        { id: "e1", label: "生活費", category: "living", annualAmount: 1_000_000 },
+      ],
+      assets: [],
+    });
+
+    const result = projectCashflow(state);
+
+    expect(result.rows[0].expense).toBe(1_000_000);
+    expect(result.rows[1].expense).toBe(1_000_000);
   });
 
   it("昇給率で収入が複利的に増える", () => {

@@ -18,8 +18,8 @@ export function applySampleLifeplan(state: AppState): AppState {
       { id: "i-spouse", label: "配偶者 給与（手取り）", annualAmount: 2_400_000, startAge: 35, endAge: 59, growthRate: 0.01 },
     ],
     expenses: [
-      { id: "e-living", label: "生活費", category: "living", annualAmount: 3_000_000 },
-      { id: "e-housing", label: "住居費（家賃/ローン）", category: "housing", annualAmount: 1_440_000, endAge: 64 },
+      { id: "e-living", label: "生活費", category: "living", annualAmount: 3_000_000, growthRate: 0.01 },
+      { id: "e-housing", label: "住居費（家賃/ローン）", category: "housing", annualAmount: 1_440_000, endAge: 64, growthRate: 0.01 },
     ],
     assets: [
       { id: "a-cash", label: "預貯金", balance: 5_000_000, annualReturnRate: 0.001 },
@@ -33,7 +33,7 @@ export function applySampleLifeplan(state: AppState): AppState {
     assumptions: {
       ...state.assumptions,
       endAge: 95,
-      inflationRate: 0.01,
+      inflationRate: 0,
       salaryGrowthRate: 0,
     },
   };

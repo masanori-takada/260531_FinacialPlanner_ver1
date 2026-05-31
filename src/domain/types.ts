@@ -17,8 +17,8 @@ export interface Household {
 export interface Assumptions {
   currentYear: number; // 計算の起点となる西暦
   endAge: number; // 本人の何歳まで投影するか（既定95）
-  inflationRate: number; // 支出の年次上昇率（小数。0.01=1%）
-  salaryGrowthRate: number; // 収入の年次上昇率（個別未指定時の既定）
+  inflationRate: number; // 互換用（UI・計算では未使用）
+  salaryGrowthRate: number; // 互換用（UI・計算では未使用）
 }
 
 export interface Income {
@@ -44,7 +44,7 @@ export interface Expense {
   annualAmount: number;
   startAge?: number; // 未指定なら全期間
   endAge?: number;
-  growthRate?: number; // 未指定なら assumptions.inflationRate
+  growthRate?: number; // 年次物価上昇率（未指定なら0%）
 }
 
 export interface Asset {

@@ -53,7 +53,7 @@ function addAnnualAmount(
 
 export function normalizeCashflowSources(state: AppState): AnnualCashflowItem[] {
   const startAge = selfCurrentAge(state);
-  const { endAge, currentYear, inflationRate } = state.assumptions;
+  const { endAge, currentYear } = state.assumptions;
   const items: AnnualCashflowItem[] = [];
 
   for (let age = startAge; age <= endAge; age++) {
@@ -81,7 +81,7 @@ export function normalizeCashflowSources(state: AppState): AnnualCashflowItem[] 
       const from = exp.startAge ?? startAge;
       const to = exp.endAge ?? endAge;
       if (age >= from && age <= to) {
-        const g = exp.growthRate ?? inflationRate;
+        const g = exp.growthRate ?? 0;
         items.push(
           item({
             sourceKind: "manualExpense",
