@@ -108,6 +108,54 @@ describe("projectCashflow", () => {
     expect(result.rows[1].expense).toBe(1_020_000);
   });
 
+  it("既定昇給率で個別未指定の収入が複利的に増える", () => {
+    const state = baseState({
+      assumptions: {
+        currentYear: 2025,
+        endAge: 36,
+        inflationRate: 0,
+        salaryGrowthRate: 0.02,
+      },
+      incomes: [
+        { id: "i1", label: "給与", annualAmount: 5_000_000, startAge: 35, endAge: 36 },
+      ],
+      expenses: [],
+      assets: [],
+    });
+
+    const result = projectCashflow(state);
+
+    expect(result.rows[0].income).toBe(5_000_000);
+    expect(result.rows[1].income).toBe(5_100_000);
+  });
+
+  it("個別昇給率がある収入は既定昇給率より優先される", () => {
+    const state = baseState({
+      assumptions: {
+        currentYear: 2025,
+        endAge: 36,
+        inflationRate: 0,
+        salaryGrowthRate: 0.05,
+      },
+      incomes: [
+        {
+          id: "i1",
+          label: "給与",
+          annualAmount: 5_000_000,
+          startAge: 35,
+          endAge: 36,
+          growthRate: 0.01,
+        },
+      ],
+      expenses: [],
+      assets: [],
+    });
+
+    const result = projectCashflow(state);
+
+    expect(result.rows[1].income).toBe(5_050_000);
+  });
+
   it("資産の運用利回りが残高に複利で効く", () => {
     const state = baseState({
       assumptions: {

@@ -195,17 +195,18 @@ export function LifeplanForm({
             }
             help="未設定なら0%。例: 1%"
           />
-          <PercentField
-            label="昇給率（収入の増加・既定）"
-            value={state.assumptions.salaryGrowthRate}
-            onChange={(v) =>
-              setState((s) => ({ ...s, assumptions: { ...s.assumptions, salaryGrowthRate: v } }))
-            }
-          />
         </div>
       </Card>
 
       <Card title="② 収入（年額）">
+        <PercentField
+          label="全収入の既定昇給率"
+          value={state.assumptions.salaryGrowthRate}
+          onChange={(v) =>
+            setState((s) => ({ ...s, assumptions: { ...s.assumptions, salaryGrowthRate: v } }))
+          }
+          help="個別昇給率が未指定の収入に適用されます。給与など収入の増加前提はここで調整します。"
+        />
         {state.incomes.map((inc) => (
           <div key={inc.id} className="border-b border-gray-100 pb-3 mb-3 last:border-0">
             <input
@@ -214,10 +215,16 @@ export function LifeplanForm({
               placeholder="項目名"
               onChange={(e) => patchIncome(inc.id, { label: e.target.value })}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-x-3">
               <NumberField label="年額" value={inc.annualAmount} onChange={(v) => patchIncome(inc.id, { annualAmount: v })} suffix="円" step={100000} />
               <NumberField label="開始年齢" value={inc.startAge} onChange={(v) => patchIncome(inc.id, { startAge: v })} suffix="歳" />
               <NumberField label="終了年齢" value={inc.endAge} onChange={(v) => patchIncome(inc.id, { endAge: v })} suffix="歳" />
+              <PercentField
+                label="個別昇給率"
+                value={inc.growthRate ?? state.assumptions.salaryGrowthRate}
+                onChange={(v) => patchIncome(inc.id, { growthRate: v })}
+                help={inc.growthRate === undefined ? "既定値を使用中" : "この収入だけに適用"}
+              />
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("incomes", inc.id)}>削除</Button>
               </div>
