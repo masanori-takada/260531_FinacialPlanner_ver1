@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { AppState } from "../domain/types";
 import {
   clearState,
-  createDefaultState,
+  createInitialState,
   isStorageAvailable,
   loadState,
   saveState,
@@ -28,7 +28,7 @@ export function useAppState() {
   /** 全データ削除（FR-005）。 */
   const reset = useCallback(() => {
     clearState();
-    setState(createDefaultState());
+    setState(createInitialState());
   }, []);
 
   return { state, setState, update, reset, storageOk };

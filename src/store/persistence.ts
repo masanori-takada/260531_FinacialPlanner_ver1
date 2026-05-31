@@ -2,11 +2,12 @@
 // 単一キーにバージョン付きJSONで保存する。
 
 import type { AppState } from "../domain/types";
+import { applySampleLifeplan } from "../domain/sampleLifeplan";
 
 const STORAGE_KEY = "fp-app:state";
 export const SCHEMA_VERSION = 1;
 
-/** 既定の空状態。初回起動・リセット時に使う。 */
+/** テストや保存データ補完に使う既定の空状態。 */
 export function createDefaultState(): AppState {
   const currentYear = new Date().getFullYear();
   return {
@@ -39,6 +40,25 @@ export function createDefaultState(): AppState {
   };
 }
 
+/** 初回起動・リセット時に表示するサンプル入り状態。 */
+export function createInitialState(): AppState {
+  return applySampleLifeplan(createDefaultState());
+}
+
+function isEmptyLifeplanState(state: Partial<AppState>): boolean {
+  return (
+    (state.incomes ?? []).length === 0 &&
+    (state.expenses ?? []).length === 0 &&
+    (state.assets ?? []).length === 0 &&
+    (state.lifeEvents ?? []).length === 0 &&
+    (state.investmentPlans ?? []).length === 0 &&
+    (state.loans ?? []).length === 0 &&
+    (state.educationPlans ?? []).length === 0 &&
+    (state.budgetRecords ?? []).length === 0 &&
+    !state.pensionProfile
+  );
+}
+
 /** localStorage が利用可能か（プライベートモード等で無効な場合がある）。 */
 export function isStorageAvailable(): boolean {
   try {
@@ -58,15 +78,18 @@ export function isStorageAvailable(): boolean {
 export function loadState(): AppState {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return createDefaultState();
+    if (!raw) return createInitialState();
     const parsed = JSON.parse(raw) as Partial<AppState>;
     if (parsed.schemaVersion !== SCHEMA_VERSION) {
-      return createDefaultState();
+      return createInitialState();
+    }
+    if (isEmptyLifeplanState(parsed)) {
+      return createInitialState();
     }
     // 既定状態に対して読み込み値を浅くマージし、欠落キーを補完する。
     return { ...createDefaultState(), ...parsed } as AppState;
   } catch {
-    return createDefaultState();
+    return createInitialState();
   }
 }
 
