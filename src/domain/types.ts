@@ -203,6 +203,11 @@ export interface CashflowSourceBreakdown {
   amount: number;
 }
 
+export interface CashflowWarning {
+  kind: string;
+  message: string;
+}
+
 export interface AmortizationRow {
   index: number; // 返済回（1始まり）
   payment: number;

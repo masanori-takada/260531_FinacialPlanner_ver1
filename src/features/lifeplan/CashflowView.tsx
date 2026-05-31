@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import type { AppState } from "../../domain/types";
 import { projectCashflow } from "../../domain/cashflow/projection";
+import { detectCashflowWarnings } from "../../domain/cashflow/warnings";
 import { Card, StatTile } from "../../components/ui";
 import { DisclaimerNote } from "../../components/Disclaimer";
 import { formatManYen, formatYen } from "../../components/format";
@@ -34,6 +35,7 @@ export function CashflowView({ state }: { state: AppState }) {
   const minBalance = Math.min(...rows.map((r) => r.balance));
   const peakBalance = Math.max(...rows.map((r) => r.balance));
   const totalAssetTransfer = rows.reduce((sum, r) => sum + r.assetTransfer, 0);
+  const warnings = detectCashflowWarnings(state);
 
   // グラフ用データ（万円単位）
   const chartData = rows.map((r) => ({
@@ -53,6 +55,17 @@ export function CashflowView({ state }: { state: AppState }) {
         <div role="status" className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-emerald-800">
           <span className="font-bold">✓ </span>
           試算期間（{rows[rows.length - 1].age}歳まで）を通じて、金融資産はマイナスになりません。
+        </div>
+      )}
+
+      {warnings.length > 0 && (
+        <div role="alert" className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-amber-800">
+          <p className="font-bold mb-1">⚠ 入力の確認をおすすめします（抜け漏れ・ダブり）</p>
+          <ul className="list-disc list-inside space-y-1 text-sm">
+            {warnings.map((w) => (
+              <li key={w.kind}>{w.message}</li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -116,6 +129,7 @@ export function CashflowView({ state }: { state: AppState }) {
         {totalAssetTransfer > 0 && (
           <p className="mt-3 text-xs text-gray-500">
             資産内移転（積立など）は消費支出ではないため収支には含めず、資産形成の根拠として表示しています。
+            残高の運用利回りは保有資産全体の加重平均（④ 保有資産の利回り）で計算され、積立先口座ごとの個別利回りは反映していません。
           </p>
         )}
         <DisclaimerNote />
