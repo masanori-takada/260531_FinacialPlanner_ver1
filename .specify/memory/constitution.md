@@ -1,50 +1,101 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+==================
+Version change: (初期テンプレート) → 1.0.0
+Bump rationale: 初回批准（MAJOR=1.0.0）。FPアプリの基本原則を確立。
+Modified principles: 全プレースホルダーを具体化
+Added sections:
+  - Core Principles（5原則）
+  - 技術制約とアーキテクチャ
+  - 開発ワークフローと品質ゲート
+  - Governance
+Removed sections: なし
+Templates requiring updates:
+  - ✅ .specify/templates/plan-template.md（Constitution Checkは原則と整合・追加対応不要）
+  - ✅ .specify/templates/spec-template.md（スコープ整合・追加対応不要）
+  - ✅ .specify/templates/tasks-template.md（テスト規律タスク種別と整合）
+Follow-up TODOs: なし
+-->
+
+# 日本版ファイナンシャルプランナー支援アプリ Constitution
+
+本憲章は、ファイナンシャルプランナー（FP）の役割を支援・代替することを目的とした
+日本の家計向け統合FPアプリの開発における最上位の原則を定める。すべての仕様・計画・
+実装・レビューは本憲章に従わなければならない（MUST）。
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 計算の正確性と検証可能性（NON-NEGOTIABLE）
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+すべての金融計算（複利、ローン返済、税・社会保険料、年金、積立シミュレーション等）は、
+副作用のない純粋関数として実装しなければならない（MUST）。各計算関数には、信頼できる
+出典（公的機関の算定式・税制・料率）に基づく期待値を用いた単体テストを必ず添付する（MUST）。
+丸め処理は計算ごとに方針を明示し（例: 円未満切り捨て）、テストで固定する（MUST）。
+出典が不明確な数値や前提は、UI上およびコード上で「概算」「前提」として明示する（MUST）。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**根拠**: お金に関する誤計算はユーザーの人生設計を直接損なう。正確性が他のすべての品質に優先する。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. プライバシー優先・ローカルファースト
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+ユーザーの家計・資産・家族構成などの個人金融データは、原則として利用者の端末内
+（ブラウザの localStorage 等）にのみ保存し、外部サーバーへ送信してはならない（MUST NOT）。
+将来クラウド連携を追加する場合も、既定はローカル保存とし、外部送信は明示的な同意を
+必須とする（MUST）。第三者へのトラッキング・解析タグの埋め込みは禁止する（MUST NOT）。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**根拠**: 金融情報は最も機微な個人情報。漏洩リスクをアーキテクチャレベルで排除する。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 「専門的助言ではない」旨の明示（免責の徹底）
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+本アプリの出力はすべて一般的な情報提供・概算シミュレーションであり、税理士・FP・
+金融商品取引業者による個別の専門的助言ではない。アプリ起動時および各シミュレーション
+結果の画面に、その旨の免責表示を必ず提示する（MUST）。特定の金融商品の購入を
+推奨・勧誘する表現を用いてはならない（MUST NOT）。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**根拠**: 法令（金商法・税理士法等）順守と利用者保護。誤った依存を防ぐ。
+
+### IV. テストファーストな計算コア
+
+金融計算ロジック（`src/domain` 配下）は、テストを先に書き、失敗を確認してから実装する
+（Red-Green-Refactor を MUST）。計算コアは UI から独立した純粋モジュールとして分離し、
+UI なしで全テストが実行・合格できる状態を維持する（MUST）。
+
+**根拠**: 計算の信頼性を継続的に保証し、リファクタや税制改定時の回帰を防ぐ。
+
+### V. シンプルさ・日本語UX・アクセシビリティ
+
+UI は日本語を既定とし、専門用語には平易な補足を添える（SHOULD）。YAGNI を徹底し、
+仕様にない機能を先回り実装しない（MUST NOT）。入力は最小限から始められ、未入力でも
+概算が成立する段階的入力を旨とする（SHOULD）。主要操作はキーボードでも完結でき、
+コントラスト・フォントサイズに配慮する（SHOULD）。
+
+**根拠**: FP の代替たり得るには、専門家でない利用者が迷わず使えることが必須。
+
+## 技術制約とアーキテクチャ
+
+- フロントエンド: TypeScript + React + Vite。スタイルは Tailwind CSS。
+- 可視化: 軽量なチャートライブラリ（例: Recharts）でキャッシュフロー表・資産推移を描画。
+- 状態/永続化: ブラウザ localStorage（外部 DB 不要）。スキーマはバージョン付きで管理。
+- 計算コア: `src/domain` に純粋関数として集約。UI 層（`src/features`/`src/components`）から分離。
+- テスト: Vitest による単体テスト。計算コアは出典に基づく期待値で網羅。
+- ビルド/実行はローカル完結（`npm install` → `npm run dev`）。外部 API 必須化は禁止（MUST NOT）。
+- 税率・料率・控除額等の「改定されうる定数」は `src/domain/constants` に集約し、出典と
+  適用年度をコメントで明記する（MUST）。
+
+## 開発ワークフローと品質ゲート
+
+- 開発は Spec Kit のフロー（constitution → specify → plan → tasks → implement）に従う（MUST）。
+- 各計算機能は「仕様の受入基準 → テスト → 実装」の順で進める（MUST）。
+- マージ前ゲート: (1) 全テスト合格、(2) 計算機能に対応するテストの存在、(3) 免責表示の保持、
+  (4) 外部送信コードの不在、を確認する（MUST）。
+- 金融定数を変更する際は、出典・適用年度・影響範囲を変更記録に残す（MUST）。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+本憲章はプロジェクト内の他のすべての慣行に優先する。原則に反する仕様・実装は採用しない。
+改定はセマンティックバージョニングに従う（MAJOR: 原則の削除/再定義、MINOR: 原則・章の追加/
+実質的拡張、PATCH: 字句・明確化）。改定時は本ファイル冒頭の Sync Impact Report を更新し、
+依存テンプレート（plan/spec/tasks）との整合を確認する（MUST）。実装中に原則との不整合を
+発見した場合は、実装を止めて本憲章または仕様を先に是正する（MUST）。
+ランタイムの開発ガイダンスは `CLAUDE.md` を参照する。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-05-31 | **Last Amended**: 2026-05-31
