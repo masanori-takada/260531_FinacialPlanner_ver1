@@ -27,7 +27,7 @@ export interface Income {
   annualAmount: number;
   startAge: number; // 本人年齢基準
   endAge: number;
-  growthRate?: number; // 未指定なら assumptions.salaryGrowthRate
+  growthRate?: number; // 年次昇給率（未指定なら0%）
 }
 
 export type ExpenseCategory =

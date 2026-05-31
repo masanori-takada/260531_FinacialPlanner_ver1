@@ -14,8 +14,8 @@ export function applySampleLifeplan(state: AppState): AppState {
       ],
     },
     incomes: [
-      { id: "i-self", label: "本人 給与（手取り）", annualAmount: 4_200_000, startAge: 35, endAge: 64 },
-      { id: "i-spouse", label: "配偶者 給与（手取り）", annualAmount: 2_400_000, startAge: 35, endAge: 59 },
+      { id: "i-self", label: "本人 給与（手取り）", annualAmount: 4_200_000, startAge: 35, endAge: 64, growthRate: 0.01 },
+      { id: "i-spouse", label: "配偶者 給与（手取り）", annualAmount: 2_400_000, startAge: 35, endAge: 59, growthRate: 0.01 },
     ],
     expenses: [
       { id: "e-living", label: "生活費", category: "living", annualAmount: 3_000_000 },
@@ -34,7 +34,7 @@ export function applySampleLifeplan(state: AppState): AppState {
       ...state.assumptions,
       endAge: 95,
       inflationRate: 0.01,
-      salaryGrowthRate: 0.01,
+      salaryGrowthRate: 0,
     },
   };
 }

@@ -199,14 +199,6 @@ export function LifeplanForm({
       </Card>
 
       <Card title="② 収入（年額）">
-        <PercentField
-          label="全収入の既定昇給率"
-          value={state.assumptions.salaryGrowthRate}
-          onChange={(v) =>
-            setState((s) => ({ ...s, assumptions: { ...s.assumptions, salaryGrowthRate: v } }))
-          }
-          help="個別昇給率が未指定の収入に適用されます。給与など収入の増加前提はここで調整します。"
-        />
         {state.incomes.map((inc) => (
           <div key={inc.id} className="border-b border-gray-100 pb-3 mb-3 last:border-0">
             <input
@@ -220,10 +212,10 @@ export function LifeplanForm({
               <NumberField label="開始年齢" value={inc.startAge} onChange={(v) => patchIncome(inc.id, { startAge: v })} suffix="歳" />
               <NumberField label="終了年齢" value={inc.endAge} onChange={(v) => patchIncome(inc.id, { endAge: v })} suffix="歳" />
               <PercentField
-                label="個別昇給率"
-                value={inc.growthRate ?? state.assumptions.salaryGrowthRate}
+                label="昇給率"
+                value={inc.growthRate ?? 0}
                 onChange={(v) => patchIncome(inc.id, { growthRate: v })}
-                help={inc.growthRate === undefined ? "既定値を使用中" : "この収入だけに適用"}
+                help="毎年の増加率。0%なら据え置き。"
               />
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("incomes", inc.id)}>削除</Button>
@@ -231,7 +223,7 @@ export function LifeplanForm({
             </div>
           </div>
         ))}
-        <Button variant="secondary" onClick={() => setState((s) => ({ ...s, incomes: [...s.incomes, { id: uid(), label: "新しい収入", annualAmount: 0, startAge: selfAge, endAge: 64 }] }))}>＋ 収入を追加</Button>
+        <Button variant="secondary" onClick={() => setState((s) => ({ ...s, incomes: [...s.incomes, { id: uid(), label: "新しい収入", annualAmount: 0, startAge: selfAge, endAge: 64, growthRate: 0 }] }))}>＋ 収入を追加</Button>
       </Card>
 
       <Card title="③ 支出（年額）">
