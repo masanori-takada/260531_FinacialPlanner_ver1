@@ -67,7 +67,7 @@ describe("projectCashflow", () => {
     const state = baseState({
       assumptions: {
         currentYear: 2025,
-        endAge: 37,
+        endAge: 66,
         inflationRate: 0,
         salaryGrowthRate: 0,
       },
@@ -125,5 +125,86 @@ describe("projectCashflow", () => {
     // 35歳末: 100万×1.05=105万、36歳末: 105万×1.05=110.25万
     expect(result.rows[0].balance).toBe(1_050_000);
     expect(result.rows[1].balance).toBe(1_102_500);
+  });
+
+  it("教育費・年金・住宅ローン・積立をMECEな年次明細として統合する", () => {
+    const state = baseState({
+      assumptions: {
+        currentYear: 2025,
+        endAge: 66,
+        inflationRate: 0,
+        salaryGrowthRate: 0,
+      },
+      incomes: [
+        { id: "salary", label: "給与", annualAmount: 5_000_000, startAge: 35, endAge: 66 },
+      ],
+      expenses: [],
+      assets: [{ id: "cash", label: "預金", balance: 0 }],
+      educationPlans: [
+        {
+          id: "edu1",
+          childName: "第一子",
+          childCurrentAge: 6,
+          path: {
+            kindergarten: "public",
+            elementary: "public",
+            juniorHigh: "public",
+            highSchool: "public",
+            university: "none",
+          },
+        },
+      ],
+      pensionProfile: {
+        category: "selfEmployed",
+        averageAnnualIncome: 0,
+        enrolledYears: 40,
+        startAge: 65,
+      },
+      loans: [
+        {
+          id: "loan1",
+          principal: 1_200_000,
+          annualRate: 0,
+          years: 1,
+          method: "equalPayment",
+          prepayments: [],
+          startAge: 35,
+        },
+      ],
+      investmentPlans: [
+        {
+          id: "inv1",
+          monthlyAmount: 30_000,
+          annualRate: 0.03,
+          years: 2,
+          accountType: "nisa",
+          startAge: 35,
+        },
+      ],
+    });
+
+    const result = projectCashflow(state);
+    const age35 = result.rows[0];
+    const age36 = result.rows[1];
+    const age65 = result.rows.find((r) => r.age === 65);
+
+    expect(age35.income).toBe(5_000_000);
+    expect(age35.expense).toBe(1_553_000); // 住宅ローン120万円 + 小学校公立35.3万円
+    expect(age35.assetTransfer).toBe(360_000);
+    expect(age35.net).toBe(3_447_000);
+    expect(age35.sourceBreakdown.map((x) => x.sourceKind)).toEqual([
+      "manualIncome",
+      "education",
+      "loan",
+      "investment",
+    ]);
+
+    expect(age36.income).toBe(5_000_000);
+    expect(age36.expense).toBe(353_000);
+    expect(age36.assetTransfer).toBe(360_000);
+    expect(age36.sourceBreakdown.some((x) => x.sourceKind === "loan")).toBe(false);
+    expect(age65?.income).toBe(5_816_000); // 給与500万円 + 満額基礎年金81.6万円
+    expect(age65?.sourceBreakdown.some((x) => x.sourceKind === "pension")).toBe(true);
+    expect(result.sources.filter((x) => x.age === 35 && x.type === "expense")).toHaveLength(2);
   });
 });

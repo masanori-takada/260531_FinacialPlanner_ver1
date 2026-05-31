@@ -33,6 +33,7 @@ export function CashflowView({ state }: { state: AppState }) {
   const finalBalance = rows[rows.length - 1].balance;
   const minBalance = Math.min(...rows.map((r) => r.balance));
   const peakBalance = Math.max(...rows.map((r) => r.balance));
+  const totalAssetTransfer = rows.reduce((sum, r) => sum + r.assetTransfer, 0);
 
   // グラフ用データ（万円単位）
   const chartData = rows.map((r) => ({
@@ -87,8 +88,10 @@ export function CashflowView({ state }: { state: AppState }) {
                 <th className="px-3 py-2 text-left">西暦</th>
                 <th className="px-3 py-2">収入</th>
                 <th className="px-3 py-2">支出</th>
+                <th className="px-3 py-2">資産内移転</th>
                 <th className="px-3 py-2">収支</th>
                 <th className="px-3 py-2">資産残高</th>
+                <th className="px-3 py-2 text-left">主な根拠</th>
               </tr>
             </thead>
             <tbody>
@@ -98,13 +101,23 @@ export function CashflowView({ state }: { state: AppState }) {
                   <td className="px-3 py-1.5 text-left">{r.year}</td>
                   <td className="px-3 py-1.5">{formatYen(r.income)}</td>
                   <td className="px-3 py-1.5">{formatYen(r.expense)}</td>
+                  <td className="px-3 py-1.5 text-gray-500">{r.assetTransfer > 0 ? formatYen(r.assetTransfer) : "—"}</td>
                   <td className={`px-3 py-1.5 ${r.net < 0 ? "text-red-600" : "text-emerald-700"}`}>{formatYen(r.net)}</td>
                   <td className={`px-3 py-1.5 font-medium ${r.balance < 0 ? "text-red-600" : ""}`}>{formatYen(r.balance)}</td>
+                  <td className="px-3 py-1.5 text-left text-xs text-gray-500 max-w-56">
+                    {r.sourceBreakdown.slice(0, 3).map((s) => s.label).join(" / ")}
+                    {r.sourceBreakdown.length > 3 ? " ほか" : ""}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {totalAssetTransfer > 0 && (
+          <p className="mt-3 text-xs text-gray-500">
+            資産内移転（積立など）は消費支出ではないため収支には含めず、資産形成の根拠として表示しています。
+          </p>
+        )}
         <DisclaimerNote />
       </Card>
     </div>

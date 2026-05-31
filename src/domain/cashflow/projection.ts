@@ -4,13 +4,7 @@
 
 import type { AppState, CashflowResult, CashflowRow } from "../types";
 import { yen, safeNumber } from "../finance/rounding";
-
-/** 本人の現在年齢を求める。本人が居なければ0。 */
-function selfCurrentAge(state: AppState): number {
-  const self = state.household.members.find((m) => m.role === "self");
-  if (!self) return 0;
-  return state.assumptions.currentYear - self.birthYear;
-}
+import { normalizeCashflowSources, selfCurrentAge } from "./sources";
 
 /** 資産の初期残高合計。 */
 function initialBalance(state: AppState): number {
@@ -33,9 +27,9 @@ function portfolioReturnRate(state: AppState): number {
 
 export function projectCashflow(state: AppState): CashflowResult {
   const startAge = selfCurrentAge(state);
-  const { endAge, currentYear, inflationRate, salaryGrowthRate } =
-    state.assumptions;
+  const { endAge, currentYear } = state.assumptions;
   const returnRate = portfolioReturnRate(state);
+  const sources = normalizeCashflowSources(state);
 
   const rows: CashflowRow[] = [];
   let balance = initialBalance(state);
@@ -44,34 +38,22 @@ export function projectCashflow(state: AppState): CashflowResult {
   for (let age = startAge; age <= endAge; age++) {
     const yearIndex = age - startAge; // 投影開始からの経過年（0始まり）
     const year = currentYear + yearIndex;
-
-    // 収入: 該当年齢で有効な定常収入 ＋ ライフイベント（kind=income）
-    let income = 0;
-    for (const inc of state.incomes) {
-      if (age >= inc.startAge && age <= inc.endAge) {
-        const g = inc.growthRate ?? salaryGrowthRate;
-        income += safeNumber(inc.annualAmount) * Math.pow(1 + g, yearIndex);
-      }
-    }
-    // 支出: 該当年齢で有効な定常支出 ＋ ライフイベント（kind=expense）
-    let expense = 0;
-    for (const exp of state.expenses) {
-      const from = exp.startAge ?? startAge;
-      const to = exp.endAge ?? endAge;
-      if (age >= from && age <= to) {
-        const g = exp.growthRate ?? inflationRate;
-        expense += safeNumber(exp.annualAmount) * Math.pow(1 + g, yearIndex);
-      }
-    }
-    for (const ev of state.lifeEvents) {
-      if (ev.age === age) {
-        if (ev.kind === "income") income += safeNumber(ev.amount);
-        else expense += safeNumber(ev.amount);
-      }
-    }
-
-    income = yen(income);
-    expense = yen(expense);
+    const yearSources = sources.filter((x) => x.age === age);
+    const income = yen(
+      yearSources
+        .filter((x) => x.type === "income")
+        .reduce((sum, x) => sum + x.amount, 0),
+    );
+    const expense = yen(
+      yearSources
+        .filter((x) => x.type === "expense")
+        .reduce((sum, x) => sum + x.amount, 0),
+    );
+    const assetTransfer = yen(
+      yearSources
+        .filter((x) => x.type === "assetTransfer")
+        .reduce((sum, x) => sum + x.amount, 0),
+    );
     const net = income - expense;
 
     // 残高更新: 前年残高に運用利回りを乗じ、当年の収支を加える
@@ -81,8 +63,22 @@ export function projectCashflow(state: AppState): CashflowResult {
       depletionAge = age;
     }
 
-    rows.push({ age, year, income, expense, net, balance });
+    rows.push({
+      age,
+      year,
+      income,
+      expense,
+      assetTransfer,
+      net,
+      balance,
+      sourceBreakdown: yearSources.map((x) => ({
+        sourceKind: x.sourceKind,
+        label: x.label,
+        type: x.type,
+        amount: x.amount,
+      })),
+    });
   }
 
-  return { rows, depletionAge };
+  return { rows, depletionAge, sources };
 }

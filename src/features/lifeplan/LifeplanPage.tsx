@@ -17,9 +17,9 @@ export function LifeplanPage({
     <div>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">ライフプラン / キャッシュフロー表</h2>
+          <h2 className="text-xl font-bold text-gray-800">ライフプラン / 統合キャッシュフロー表</h2>
           <p className="text-sm text-gray-500">
-            家族・収入・支出・資産を入力すると、生涯の家計推移と老後資金の過不足が見える化されます。
+            収入・支出・資産に加え、積立・住宅ローン・教育費・年金・家計実績を同じ年次表へ集約します。
           </p>
         </div>
         <Button variant="secondary" onClick={() => setState((s) => applySampleLifeplan(s))}>

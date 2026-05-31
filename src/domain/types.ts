@@ -73,6 +73,7 @@ export interface InvestmentPlan {
   years: number;
   accountType: AccountType;
   taxableIncomeBand?: IncomeBandKey; // iDeCo 節税概算用
+  startAge?: number; // ライフプラン反映の開始年齢（未指定なら本人の現在年齢）
 }
 
 export type LoanMethod = "equalPayment" | "equalPrincipal";
@@ -91,6 +92,7 @@ export interface Loan {
   years: number;
   method: LoanMethod;
   prepayments: Prepayment[];
+  startAge?: number; // 返済開始年齢（未指定なら本人の現在年齢）
 }
 
 export type PensionCategory = "employee" | "selfEmployed";
@@ -119,6 +121,13 @@ export interface BudgetRecord {
   expenses: BudgetExpenseLine[];
 }
 
+export interface EducationPlan {
+  id: string;
+  childName: string;
+  childCurrentAge: number;
+  path: EducationPath;
+}
+
 // 課税所得帯キー（iDeCo節税概算用）。所得税率は constants/tax.ts で定義。
 export type IncomeBandKey =
   | "band195"
@@ -139,6 +148,7 @@ export interface AppState {
   lifeEvents: LifeEvent[];
   investmentPlans: InvestmentPlan[];
   loans: Loan[];
+  educationPlans: EducationPlan[];
   pensionProfile: PensionProfile | null;
   budgetRecords: BudgetRecord[];
   assumptions: Assumptions;
@@ -151,13 +161,46 @@ export interface CashflowRow {
   year: number;
   income: number;
   expense: number;
+  assetTransfer: number;
   net: number;
   balance: number;
+  sourceBreakdown: CashflowSourceBreakdown[];
 }
 
 export interface CashflowResult {
   rows: CashflowRow[];
   depletionAge: number | null;
+  sources: AnnualCashflowItem[];
+}
+
+export type CashflowSourceKind =
+  | "manualIncome"
+  | "manualExpense"
+  | "lifeEvent"
+  | "education"
+  | "pension"
+  | "loan"
+  | "budget"
+  | "investment";
+
+export type CashflowItemType = "income" | "expense" | "assetTransfer";
+
+export interface AnnualCashflowItem {
+  id: string;
+  sourceKind: CashflowSourceKind;
+  sourceId: string;
+  label: string;
+  age: number;
+  year: number;
+  type: CashflowItemType;
+  amount: number;
+}
+
+export interface CashflowSourceBreakdown {
+  sourceKind: CashflowSourceKind;
+  label: string;
+  type: CashflowItemType;
+  amount: number;
 }
 
 export interface AmortizationRow {

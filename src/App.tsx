@@ -1,36 +1,12 @@
-// アプリのシェル。タブ構成のダッシュボード＋常設の免責バナー＋全データ削除。
+// アプリのシェル。ライフプランを単一の正本にし、常設の免責バナー＋全データ削除を提供する。
 
-import { useState } from "react";
 import { DisclaimerBanner } from "./components/Disclaimer";
 import { Button } from "./components/ui";
 import { useAppState } from "./store/useAppState";
 import { LifeplanPage } from "./features/lifeplan/LifeplanPage";
-import { LoanPage } from "./features/loan/LoanPage";
-import { InvestmentPage } from "./features/investment/InvestmentPage";
-import { EducationPage } from "./features/education/EducationPage";
-import { PensionPage } from "./features/pension/PensionPage";
-import { BudgetPage } from "./features/budget/BudgetPage";
-
-type TabKey =
-  | "lifeplan"
-  | "loan"
-  | "investment"
-  | "education"
-  | "pension"
-  | "budget";
-
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: "lifeplan", label: "ライフプラン", icon: "📊" },
-  { key: "investment", label: "積立(NISA/iDeCo)", icon: "📈" },
-  { key: "loan", label: "住宅ローン", icon: "🏠" },
-  { key: "education", label: "教育資金", icon: "🎓" },
-  { key: "pension", label: "年金", icon: "👴" },
-  { key: "budget", label: "家計簿", icon: "🧾" },
-];
 
 export function App() {
   const { state, setState, reset, storageOk } = useAppState();
-  const [tab, setTab] = useState<TabKey>("lifeplan");
 
   const onReset = () => {
     if (
@@ -67,31 +43,13 @@ export function App() {
       )}
 
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-2 flex overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                tab === t.key
-                  ? "border-brand-600 text-brand-700"
-                  : "border-transparent text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              <span className="mr-1">{t.icon}</span>
-              {t.label}
-            </button>
-          ))}
+        <div className="max-w-6xl mx-auto px-4 py-3 text-sm text-gray-600">
+          ライフプランに、積立・住宅ローン・教育費・年金・家計実績を抜けもれなく反映します。
         </div>
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {tab === "lifeplan" && <LifeplanPage state={state} setState={setState} />}
-        {tab === "investment" && <InvestmentPage state={state} setState={setState} />}
-        {tab === "loan" && <LoanPage state={state} setState={setState} />}
-        {tab === "education" && <EducationPage state={state} setState={setState} />}
-        {tab === "pension" && <PensionPage state={state} setState={setState} />}
-        {tab === "budget" && <BudgetPage state={state} setState={setState} />}
+        <LifeplanPage state={state} setState={setState} />
       </main>
 
       <footer className="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-gray-400">

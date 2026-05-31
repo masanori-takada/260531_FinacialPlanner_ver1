@@ -27,6 +27,7 @@ export function createDefaultState(): AppState {
     lifeEvents: [],
     investmentPlans: [],
     loans: [],
+    educationPlans: [],
     pensionProfile: null,
     budgetRecords: [],
     assumptions: {
