@@ -11,7 +11,8 @@ export function safeNumber(value: number, fallback = 0): number {
  */
 export function yen(value: number): number {
   if (!Number.isFinite(value)) return 0;
-  return Math.floor(value);
+  const v = Math.trunc(value);
+  return v === 0 ? 0 : v;
 }
 
 /** 年利（小数）を月利（小数）へ。単純に12等分する。 */

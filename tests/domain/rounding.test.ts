@@ -10,9 +10,10 @@ describe("rounding", () => {
     it("整数はそのまま", () => {
       expect(yen(100)).toBe(100);
     });
-    it("負の値は0方向ではなく数値的に切り捨て（floor）", () => {
-      // 損失額などで負になる場合、floorで一貫させる
-      expect(yen(-0.5)).toBe(-1);
+    it("負の数の端数を零方向に切り捨てること", () => {
+      expect(yen(-100.2)).toBe(-100);
+      expect(yen(-100.9)).toBe(-100);
+      expect(yen(-0.5)).toBe(0);
     });
     it("NaN/Infinityは0に丸める", () => {
       expect(yen(NaN)).toBe(0);
