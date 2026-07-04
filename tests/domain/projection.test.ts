@@ -359,4 +359,90 @@ describe("projectCashflow", () => {
     const result = projectCashflow(state);
     expect(result.rows.length).toBeGreaterThan(0);
   });
+
+  it("預貯金（非運用資産）を減らした際に資産枯渇年齢が正しく早まる（若くなる）こと（逆転バグの解消）", () => {
+    const baselineState = baseState({
+      assumptions: { currentYear: 2025, endAge: 100, inflationRate: 0, salaryGrowthRate: 0 },
+      incomes: [
+        { id: "inc1", label: "給与", annualAmount: 4_000_000, startAge: 35, endAge: 60 }
+      ],
+      expenses: [
+        { id: "exp1", label: "生活費", category: "living", annualAmount: 4_500_000 }
+      ],
+      assets: [
+        { id: "cash", label: "預貯金", balance: 5_000_000, annualReturnRate: 0.001 },
+        { id: "inv", label: "投資", balance: 2_000_000, annualReturnRate: 0.03 },
+      ]
+    });
+    
+    const reducedState = baseState({
+      assumptions: { currentYear: 2025, endAge: 100, inflationRate: 0, salaryGrowthRate: 0 },
+      incomes: [
+        { id: "inc1", label: "給与", annualAmount: 4_000_000, startAge: 35, endAge: 60 }
+      ],
+      expenses: [
+        { id: "exp1", label: "生活費", category: "living", annualAmount: 4_500_000 }
+      ],
+      assets: [
+        { id: "cash", label: "預貯金", balance: 1_000_000, annualReturnRate: 0.001 },
+        { id: "inv", label: "投資", balance: 2_000_000, annualReturnRate: 0.03 },
+      ]
+    });
+
+    const baselineResult = projectCashflow(baselineState);
+    const reducedResult = projectCashflow(reducedState);
+
+    expect(baselineResult.depletionAge).toBeDefined();
+    expect(reducedResult.depletionAge).toBeDefined();
+    expect(reducedResult.depletionAge!).toBeLessThan(baselineResult.depletionAge!);
+  });
+
+  it("資産配列が undefined、および年利回りが undefined のブランチカバー", () => {
+    const state = baseState({
+      assets: undefined,
+    });
+    const result = projectCashflow(state);
+    expect(result.rows.length).toBeGreaterThan(0);
+
+    const stateWithUndefRate = baseState({
+      assets: [
+        { id: "inv", label: "投資", balance: 1_000_000, annualReturnRate: undefined }
+      ]
+    });
+    const resultWithUndef = projectCashflow(stateWithUndefRate);
+    expect(resultWithUndef.rows.length).toBeGreaterThan(0);
+  });
+
+  it("積立プランがあり、かつ利回り最大の資産が運用資産である場合の積立移転のカバー", () => {
+    const state = baseState({
+      assumptions: { currentYear: 2025, endAge: 36, inflationRate: 0, salaryGrowthRate: 0 },
+      assets: [
+        { id: "cash", label: "預貯金", balance: 1_000_000, annualReturnRate: 0.001 },
+        { id: "inv", label: "投資", balance: 1_000_000, annualReturnRate: 0.03 },
+      ],
+      investmentPlans: [
+        {
+          id: "plan1",
+          monthlyAmount: 10_000,
+          annualRate: 0.03,
+          years: 1,
+          accountType: "nisa",
+          startAge: 35,
+        }
+      ]
+    });
+    const result = projectCashflow(state);
+    expect(result.rows[0].assetTransfer).toBe(120_000);
+  });
+
+  it("資産配列の要素の利回り順序が降順の場合の lowest/highest 探索ブランチカバー", () => {
+    const state = baseState({
+      assets: [
+        { id: "inv", label: "投資", balance: 2_000_000, annualReturnRate: 0.03 },
+        { id: "cash", label: "預貯金", balance: 1_000_000, annualReturnRate: 0.001 },
+      ]
+    });
+    const result = projectCashflow(state);
+    expect(result.rows.length).toBeGreaterThan(0);
+  });
 });

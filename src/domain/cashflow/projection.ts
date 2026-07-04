@@ -6,37 +6,24 @@ import type { AppState, CashflowResult, CashflowRow } from "../types";
 import { yen, safeNumber } from "../finance/rounding";
 import { normalizeCashflowSources, selfCurrentAge } from "./sources";
 
-/** 資産の初期残高合計。 */
-function initialBalance(state: AppState): number {
-  return state.assets.reduce((sum, a) => sum + safeNumber(a.balance), 0);
-}
-
-/**
- * 資産全体の加重平均利回り（残高で加重）。
- * 残高合計が0なら0。複数資産を単一ポートフォリオとして扱う簡略モデル。
- */
-function portfolioReturnRate(state: AppState): number {
-  const total = initialBalance(state);
-  if (total <= 0) return 0;
-  const weighted = state.assets.reduce(
-    (sum, a) => sum + safeNumber(a.balance) * safeNumber(a.annualReturnRate ?? 0),
-    0,
-  );
-  return weighted / total;
-}
-
 export function projectCashflow(state: AppState): CashflowResult {
   const startAge = selfCurrentAge(state);
   const { endAge, currentYear } = state.assumptions;
-  const returnRate = portfolioReturnRate(state);
   const sources = normalizeCashflowSources(state);
 
+  const assetsTracker = (state.assets && state.assets.length > 0)
+    ? state.assets.map(a => ({
+        id: a.id,
+        balance: safeNumber(a.balance),
+        rate: safeNumber(a.annualReturnRate ?? 0)
+      }))
+    : [{ id: "default_cash", balance: 0, rate: 0 }];
+
   const rows: CashflowRow[] = [];
-  let balance = initialBalance(state);
   let depletionAge: number | null = null;
 
   for (let age = startAge; age <= endAge; age++) {
-    const yearIndex = age - startAge; // 投影開始からの経過年（0始まり）
+    const yearIndex = age - startAge;
     const year = currentYear + yearIndex;
     const yearSources = sources.filter((x) => x.age === age);
     const income = yen(
@@ -56,9 +43,48 @@ export function projectCashflow(state: AppState): CashflowResult {
     );
     const net = income - expense;
 
-    // 残高更新: 前年残高がプラスの場合のみ運用利回りを乗じ、当年の収支を加える
-    const interest = balance > 0 ? balance * returnRate : 0;
-    balance = yen(balance + interest + net);
+    for (const a of assetsTracker) {
+      if (a.balance > 0) {
+        const interest = a.balance * a.rate;
+        a.balance = yen(a.balance + interest);
+      }
+    }
+
+    const lowest = assetsTracker.reduce((min, cur) => cur.rate < min.rate ? cur : min, assetsTracker[0]);
+    const highest = assetsTracker.reduce((max, cur) => cur.rate > max.rate ? cur : max, assetsTracker[0]);
+
+    if (assetTransfer > 0) {
+      if (lowest) {
+        lowest.balance = yen(lowest.balance - assetTransfer);
+      }
+      if (highest && highest.rate > 0) {
+        highest.balance = yen(highest.balance + assetTransfer);
+      } else if (lowest) {
+        lowest.balance = yen(lowest.balance + assetTransfer);
+      }
+    }
+
+    if (net >= 0) {
+      if (lowest) {
+        lowest.balance = yen(lowest.balance + net);
+      }
+    } else {
+      let deficit = -net;
+      const sorted = [...assetsTracker].sort((a, b) => a.rate - b.rate);
+      for (const a of sorted) {
+        if (deficit <= 0) break;
+        if (a.balance > 0) {
+          const withdraw = Math.min(a.balance, deficit);
+          a.balance = yen(a.balance - withdraw);
+          deficit -= withdraw;
+        }
+      }
+      if (deficit > 0 && lowest) {
+        lowest.balance = yen(lowest.balance - deficit);
+      }
+    }
+
+    const balance = yen(assetsTracker.reduce((sum, a) => sum + a.balance, 0));
 
     if (depletionAge === null && balance < 0) {
       depletionAge = age;
