@@ -45,19 +45,7 @@ export function createInitialState(): AppState {
   return applySampleLifeplan(createDefaultState());
 }
 
-function isEmptyLifeplanState(state: Partial<AppState>): boolean {
-  return (
-    (state.incomes ?? []).length === 0 &&
-    (state.expenses ?? []).length === 0 &&
-    (state.assets ?? []).length === 0 &&
-    (state.lifeEvents ?? []).length === 0 &&
-    (state.investmentPlans ?? []).length === 0 &&
-    (state.loans ?? []).length === 0 &&
-    (state.educationPlans ?? []).length === 0 &&
-    (state.budgetRecords ?? []).length === 0 &&
-    !state.pensionProfile
-  );
-}
+
 
 /** localStorage が利用可能か（プライベートモード等で無効な場合がある）。 */
 export function isStorageAvailable(): boolean {

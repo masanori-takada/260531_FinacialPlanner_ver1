@@ -1,6 +1,6 @@
 // 共通UI部品（入力・カード・セクション見出し等）。日本語UX・アクセシビリティ配慮。
 
-import type { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 
 export function Card({
   title,
@@ -40,6 +40,25 @@ export function NumberField({
   min?: number;
   help?: string;
 }) {
+  const [inputValue, setInputValue] = useState<string>(() =>
+    Number.isFinite(value) ? value.toString() : ""
+  );
+
+  useEffect(() => {
+    setInputValue(Number.isFinite(value) ? value.toString() : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valStr = e.target.value;
+    setInputValue(valStr);
+    const parsed = parseFloat(valStr);
+    if (!isNaN(parsed)) {
+      onChange(parsed);
+    } else {
+      onChange(0);
+    }
+  };
+
   return (
     <label className="block mb-3">
       <span className="block text-sm font-medium text-gray-700 mb-1">
@@ -49,10 +68,10 @@ export function NumberField({
         <input
           type="number"
           className="tabular w-full rounded-md border border-gray-300 px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
-          value={Number.isFinite(value) ? value : 0}
+          value={inputValue}
           step={step}
           min={min}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          onChange={handleChange}
         />
         {suffix && <span className="text-sm text-gray-500 shrink-0">{suffix}</span>}
       </div>
