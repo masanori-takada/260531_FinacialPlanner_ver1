@@ -425,6 +425,17 @@ export function LifeplanForm({
               <SelectField label="中学校" value={plan.path.juniorHigh} options={SCHOOL_TYPE_OPTIONS} onChange={(v) => patchEducationPath(plan.id, { juniorHigh: v })} />
               <SelectField label="高校" value={plan.path.highSchool} options={SCHOOL_TYPE_OPTIONS} onChange={(v) => patchEducationPath(plan.id, { highSchool: v })} />
               <SelectField label="大学" value={plan.path.university} options={UNIVERSITY_OPTIONS} onChange={(v) => patchEducationPath(plan.id, { university: v as UniversityKind | "none" })} />
+              {plan.path.university !== "none" && (
+                <SelectField
+                  label="大学通学方法"
+                  value={plan.path.universityCommute ?? "home"}
+                  options={[
+                    { value: "home", label: "自宅" },
+                    { value: "away", label: "自宅外（下宿）" },
+                  ]}
+                  onChange={(v) => patchEducationPath(plan.id, { universityCommute: v as "home" | "away" })}
+                />
+              )}
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("educationPlans", plan.id)}>削除</Button>
               </div>
