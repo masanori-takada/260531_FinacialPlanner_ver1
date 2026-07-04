@@ -83,9 +83,6 @@ export function loadState(): AppState {
     if (parsed.schemaVersion !== SCHEMA_VERSION) {
       return createInitialState();
     }
-    if (isEmptyLifeplanState(parsed)) {
-      return createInitialState();
-    }
     // 既定状態に対して読み込み値を浅くマージし、欠落キーを補完する。
     return { ...createDefaultState(), ...parsed } as AppState;
   } catch {
