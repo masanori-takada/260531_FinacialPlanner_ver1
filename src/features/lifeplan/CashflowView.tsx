@@ -13,11 +13,24 @@ import {
 import type { AppState } from "../../domain/types";
 import { projectCashflow } from "../../domain/cashflow/projection";
 import { detectCashflowWarnings } from "../../domain/cashflow/warnings";
+import { selfCurrentAge } from "../../domain/cashflow/sources";
 import { Card, StatTile } from "../../components/ui";
 import { DisclaimerNote } from "../../components/Disclaimer";
 import { formatManYen, formatYen } from "../../components/format";
 
 export function CashflowView({ state }: { state: AppState }) {
+  const startAge = selfCurrentAge(state);
+
+  if (state.assumptions.endAge < startAge) {
+    return (
+      <Card title="キャッシュフロー">
+        <p className="text-red-600 text-sm font-bold">
+          エラー: 何歳まで試算するか（{state.assumptions.endAge}歳）が本人の現在年齢（{startAge}歳）より小さくなっています。設定を見直してください。
+        </p>
+      </Card>
+    );
+  }
+
   const result = projectCashflow(state);
   const rows = result.rows;
 
