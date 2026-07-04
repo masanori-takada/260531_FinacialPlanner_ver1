@@ -265,4 +265,18 @@ describe("projectCashflow", () => {
     expect(age65?.sourceBreakdown.some((x) => x.sourceKind === "pension")).toBe(true);
     expect(result.sources.filter((x) => x.age === 35 && x.type === "expense")).toHaveLength(2);
   });
+
+  it("資産がマイナスのとき運用利息が発生せず、生活支出のみで減少すること", () => {
+    const state = baseState({
+      assumptions: { currentYear: 2025, endAge: 37, inflationRate: 0, salaryGrowthRate: 0 },
+      incomes: [],
+      expenses: [{ id: "e1", label: "生活費", category: "living", annualAmount: 2_000_000 }],
+      assets: [{ id: "a1", label: "投資", balance: 1_000_000, annualReturnRate: 0.05 }],
+    });
+    const result = projectCashflow(state);
+    // 35歳末: yen(100万 * 1.05 - 200万) = -950,000
+    expect(result.rows[0].balance).toBe(-950_000);
+    // 36歳末: yen(-950,000 - 200万) = -2,950,000
+    expect(result.rows[1].balance).toBe(-2_950_000);
+  });
 });

@@ -56,8 +56,9 @@ export function projectCashflow(state: AppState): CashflowResult {
     );
     const net = income - expense;
 
-    // 残高更新: 前年残高に運用利回りを乗じ、当年の収支を加える
-    balance = yen(balance * (1 + returnRate) + net);
+    // 残高更新: 前年残高がプラスの場合のみ運用利回りを乗じ、当年の収支を加える
+    const interest = balance > 0 ? balance * returnRate : 0;
+    balance = yen(balance + interest + net);
 
     if (depletionAge === null && balance < 0) {
       depletionAge = age;
