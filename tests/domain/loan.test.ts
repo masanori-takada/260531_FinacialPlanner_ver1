@@ -95,4 +95,42 @@ describe("buildAmortization（元利均等・償還表）", () => {
       result.rows[result.rows.length - 1].payment,
     );
   });
+
+  it("元金均等返済において返済額軽減型繰上返済時に毎月の元金返済額が再計算されること", () => {
+    const loan = {
+      id: "l1",
+      principal: 12_000_000,
+      annualRate: 0,
+      years: 10, // 120回
+      method: "equalPrincipal" as const,
+      prepayments: [
+        { atMonth: 12, amount: 1_200_000, mode: "reducePayment" as const }
+      ],
+    };
+    const result = buildAmortization(loan);
+    // 初期元金部分: 1200万 / 120 = 100,000円
+    // 12ヶ月返済後、残高は 1200万 - 120万 = 1080万。そこから120万繰上返済で残高960万。
+    // 残期間は 120 - 12 = 108ヶ月。
+    // 返済額軽減型では、新たな元金返済額は 960万 / 108 = 88,888円
+    expect(result.rows[12].principalPart).toBe(88_888);
+    // 総返済期間は120回のまま維持されること
+    expect(result.monthsToPayoff).toBe(120);
+  });
+
+  it("元利均等返済において返済額軽減型繰上返済時に毎月の支払額が減少すること", () => {
+    const loan = {
+      id: "l2",
+      principal: 10_000_000,
+      annualRate: 0.02,
+      years: 10,
+      method: "equalPayment" as const,
+      prepayments: [
+        { atMonth: 12, amount: 1_000_000, mode: "reducePayment" as const }
+      ],
+    };
+    const result = buildAmortization(loan);
+    // 12回目返済直後に繰上返済。13回目の返済額(rows[12])が12回目の返済額(rows[11])より減少すること。
+    expect(result.rows[12].payment).toBeLessThan(result.rows[11].payment);
+    expect(result.monthsToPayoff).toBe(120);
+  });
 });

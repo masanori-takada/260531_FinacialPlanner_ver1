@@ -36,7 +36,7 @@ export function buildAmortization(loan: Loan): AmortizationResult {
   let balance = safeNumber(principal);
   let monthlyPay = monthlyPaymentEqual(principal, annualRate, years);
   // 元金均等の場合: 毎回の元金返済額は固定
-  const fixedPrincipalPart =
+  let fixedPrincipalPart =
     method === "equalPrincipal" ? yen(principal / totalMonths) : 0;
 
   let index = 1;
@@ -61,7 +61,11 @@ export function buildAmortization(loan: Loan): AmortizationResult {
         // 返済額軽減型: 残期間は変えず毎月返済額を再計算
         const remainMonths = totalMonths - (index - 1);
         if (remainMonths > 0) {
-          monthlyPay = monthlyPaymentEqual(balance, annualRate, remainMonths / 12);
+          if (method === "equalPrincipal") {
+            fixedPrincipalPart = yen(balance / remainMonths);
+          } else {
+            monthlyPay = monthlyPaymentEqual(balance, annualRate, remainMonths / 12);
+          }
         }
       }
     }
