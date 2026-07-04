@@ -107,4 +107,62 @@ describe("detectCashflowWarnings", () => {
     const kinds = detectCashflowWarnings(state).map((w) => w.kind);
     expect(kinds).toContain("education-beyond-end");
   });
+
+  it("家計実績と手動支出の両方があるときに重複警告を生成すること", () => {
+    const state = baseState({
+      expenses: [{ id: "e1", label: "生活費", category: "living", annualAmount: 100_000 }],
+      budgetRecords: [
+        {
+          id: "b1",
+          yearMonth: "2025-01",
+          incomes: [],
+          expenses: [{ category: "living", amount: 10_000 }],
+        },
+      ],
+    });
+    const warnings = detectCashflowWarnings(state);
+    expect(warnings.some((w) => w.kind === "duplicate-budget")).toBe(true);
+  });
+
+  it("各種未定義値や空名称などのエッジケースに対する警告生成の動作確認", () => {
+    const state = baseState({
+      educationPlans: undefined,
+      loans: [
+        {
+          id: "l1",
+          principal: 0,
+          annualRate: 0,
+          years: 10,
+          method: "equalPayment",
+          prepayments: [],
+          startAge: undefined,
+        },
+      ],
+    });
+    const warnings = detectCashflowWarnings(state);
+    expect(warnings).toHaveLength(0);
+  });
+
+  it("名前のない教育費プランで試算終了年齢を超える場合にデフォルト名で警告を出すこと", () => {
+    const state = baseState({
+      assumptions: { currentYear: 2025, endAge: 40, inflationRate: 0, salaryGrowthRate: 0 },
+      educationPlans: [
+        {
+          id: "edu1",
+          childName: "",
+          childCurrentAge: 3,
+          path: {
+            kindergarten: "public",
+            elementary: "public",
+            juniorHigh: "public",
+            highSchool: "public",
+            university: "privateScience",
+          },
+        },
+      ],
+    });
+    const warnings = detectCashflowWarnings(state);
+    const targetWarning = warnings.find((w) => w.kind === "education-beyond-end");
+    expect(targetWarning?.message).toContain("子ども");
+  });
 });

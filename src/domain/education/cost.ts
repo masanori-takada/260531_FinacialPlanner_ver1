@@ -56,10 +56,7 @@ export function educationCostSchedule(
     // その年齢で在籍しているステージを探す
     const stageEntry = stages.find((s) => age >= s.startAge && age <= s.endAge);
     const stage = stageEntry?.stage ?? null;
-    const cost =
-      stage !== null && !(stage === "university" && path.university === "none")
-        ? annualCost(stage as StageKey, path)
-        : 0;
+    const cost = stage !== null ? annualCost(stage as StageKey, path) : 0;
 
     perYear.push({ age, cost, stage: stage as SchoolStage | null });
   }

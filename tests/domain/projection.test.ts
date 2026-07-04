@@ -279,4 +279,84 @@ describe("projectCashflow", () => {
     // 36歳末: yen(-950,000 - 200万) = -2,950,000
     expect(result.rows[1].balance).toBe(-2_950_000);
   });
+
+  it("家計実績がある場合に実績ベースの支出がキャッシュフローに集計されること", () => {
+    const state = baseState({
+      budgetRecords: [
+        {
+          id: "b1",
+          yearMonth: "2025-01",
+          incomes: [],
+          expenses: [{ category: "living", amount: 250_000 }],
+        },
+      ],
+    });
+    const result = projectCashflow(state);
+    // 年間換算額: 25万 * 12 = 300万円
+    expect(result.rows[0].expense).toBe(3_000_000);
+  });
+
+  it("ローンや積立プランの開始年齢が未定義、あるいは試算期間外であるブランチの確認", () => {
+    const state = baseState({
+      assumptions: { currentYear: 2025, endAge: 40, inflationRate: 0, salaryGrowthRate: 0 },
+      loans: [
+        {
+          id: "l_no_start",
+          principal: 10_000_000,
+          annualRate: 0.01,
+          years: 30,
+          method: "equalPayment",
+          prepayments: [],
+          startAge: undefined,
+        }
+      ],
+      investmentPlans: [
+        {
+          id: "inv_no_start",
+          monthlyAmount: 10_000,
+          annualRate: 0.03,
+          years: 20,
+          accountType: "nisa",
+          startAge: undefined,
+        }
+      ]
+    });
+    const result = projectCashflow(state);
+    expect(result.rows.length).toBe(6);
+  });
+
+  it("各プラン配列（loans, investmentPlans, budgetRecords, educationPlans）が undefined の場合、および子どもの名前が空の場合のブランチカバー", () => {
+    const state = baseState({
+      loans: undefined,
+      investmentPlans: undefined,
+      budgetRecords: undefined,
+      educationPlans: [
+        {
+          id: "edu_no_name",
+          childName: "",
+          childCurrentAge: 6,
+          path: {
+            kindergarten: "public",
+            elementary: "public",
+            juniorHigh: "public",
+            highSchool: "public",
+            university: "nationalPublic",
+          },
+        },
+      ],
+    });
+    const result = projectCashflow(state);
+    expect(result.rows.length).toBeGreaterThan(0);
+    const hasChildEdu = result.sources.some((s) => s.label === "子ども 教育費");
+    expect(hasChildEdu).toBe(true);
+  });
+
+  it("世帯メンバーに本人（self）がいない場合、および教育プラン配列が undefined の場合のカバー", () => {
+    const state = baseState({
+      educationPlans: undefined,
+    });
+    state.household.members = [];
+    const result = projectCashflow(state);
+    expect(result.rows.length).toBeGreaterThan(0);
+  });
 });

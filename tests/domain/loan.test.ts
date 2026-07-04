@@ -133,4 +133,19 @@ describe("buildAmortization（元利均等・償還表）", () => {
     expect(result.rows[12].payment).toBeLessThan(result.rows[11].payment);
     expect(result.monthsToPayoff).toBe(120);
   });
+
+  it("繰上返済時に繰上金額がローン残高以上となり即時完済するケース", () => {
+    const loan = {
+      id: "l3",
+      principal: 10_000_000,
+      annualRate: 0,
+      years: 10,
+      method: "equalPayment" as const,
+      prepayments: [
+        { atMonth: 12, amount: 9_900_000, mode: "shortenTerm" as const }
+      ],
+    };
+    const result = buildAmortization(loan);
+    expect(result.monthsToPayoff).toBe(12);
+  });
 });

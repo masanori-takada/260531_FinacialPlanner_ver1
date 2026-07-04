@@ -54,4 +54,20 @@ describe("compareAccounts", () => {
     expect(result.ideco).toBeDefined();
     expect(result.taxable).toBeDefined();
   });
+
+  it("iDeCo: 課税所得帯が未指定または無効なキーのときに節税額が0になること", () => {
+    const resultNoBand = compareAccounts({
+      ...basePlan,
+      accountType: "ideco",
+      taxableIncomeBand: undefined,
+    });
+    expect(resultNoBand.ideco.taxSaving).toBe(0);
+
+    const resultInvalidBand = compareAccounts({
+      ...basePlan,
+      accountType: "ideco",
+      taxableIncomeBand: "invalidKey" as any,
+    });
+    expect(resultInvalidBand.ideco.taxSaving).toBe(0);
+  });
 });

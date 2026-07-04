@@ -34,7 +34,8 @@ function calcIDecoTaxSaving(
   band?: IncomeBandKey,
 ): number {
   if (!band) return 0;
-  const marginalRate = INCOME_TAX_MARGINAL_RATE[band] ?? 0;
+  const marginalRate = INCOME_TAX_MARGINAL_RATE[band];
+  if (marginalRate === undefined) return 0;
   const annualContrib = safeNumber(monthlyAmount) * 12;
   return yen(annualContrib * (marginalRate + RESIDENT_TAX_RATE) * safeNumber(years));
 }
