@@ -499,7 +499,9 @@ export function LifeplanForm({
               <PercentField label="想定年利" value={plan.annualRate} onChange={(v) => patchInvestment(plan.id, { annualRate: v })} />
               <NumberField label="積立年数" value={plan.years} onChange={(v) => patchInvestment(plan.id, { years: v })} suffix="年" min={1} />
               <SelectField label="口座種別" value={plan.accountType} options={[...ACCOUNT_OPTIONS]} onChange={(v) => patchInvestment(plan.id, { accountType: v })} />
-              <SelectField label="課税所得帯" value={plan.taxableIncomeBand ?? "band695"} options={BAND_OPTIONS} onChange={(v) => patchInvestment(plan.id, { taxableIncomeBand: v })} />
+              {plan.accountType === "ideco" && (
+                <SelectField label="課税所得帯" value={plan.taxableIncomeBand ?? "band695"} options={BAND_OPTIONS} onChange={(v) => patchInvestment(plan.id, { taxableIncomeBand: v })} />
+              )}
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("investmentPlans", plan.id)}>削除</Button>
               </div>
