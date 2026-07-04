@@ -312,6 +312,77 @@ export function LifeplanForm({
               <div className="flex items-end pb-3">
                 <Button variant="danger" onClick={() => remove("loans", loan.id)}>削除</Button>
               </div>
+              
+              {/* 繰上返済設定 */}
+              <div className="col-span-2 sm:col-span-3 mt-3 bg-gray-50/50 p-3 rounded-lg border border-gray-200">
+                <span className="block text-xs font-semibold text-gray-700 mb-2">繰上返済設定</span>
+                <div className="space-y-2">
+                  {(loan.prepayments ?? []).map((p, pIdx) => (
+                    <div key={pIdx} className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-center bg-white p-2 rounded-md border border-gray-200">
+                      <NumberField
+                        label="返済月"
+                        value={p.atMonth}
+                        onChange={(v) => {
+                          const nextPrepays = [...loan.prepayments];
+                          nextPrepays[pIdx] = { ...p, atMonth: v };
+                          patchLoan(loan.id, { prepayments: nextPrepays });
+                        }}
+                        suffix="ヶ月目"
+                        min={1}
+                      />
+                      <NumberField
+                        label="繰上金額"
+                        value={p.amount}
+                        onChange={(v) => {
+                          const nextPrepays = [...loan.prepayments];
+                          nextPrepays[pIdx] = { ...p, amount: v };
+                          patchLoan(loan.id, { prepayments: nextPrepays });
+                        }}
+                        suffix="円"
+                        step={100_000}
+                        min={0}
+                      />
+                      <SelectField
+                        label="方式"
+                        value={p.mode}
+                        options={[
+                          { value: "shortenTerm", label: "期間短縮" },
+                          { value: "reducePayment", label: "返済額軽減" },
+                        ]}
+                        onChange={(v) => {
+                          const nextPrepays = [...loan.prepayments];
+                          nextPrepays[pIdx] = { ...p, mode: v as any };
+                          patchLoan(loan.id, { prepayments: nextPrepays });
+                        }}
+                      />
+                      <div className="flex items-end pb-3">
+                        <Button
+                          variant="danger"
+                          onClick={() => {
+                            const nextPrepays = loan.prepayments.filter((_, idx) => idx !== pIdx);
+                            patchLoan(loan.id, { prepayments: nextPrepays });
+                          }}
+                        >
+                          削除
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      const nextPrepays = [
+                        ...(loan.prepayments ?? []),
+                        { atMonth: 12, amount: 1_000_000, mode: "shortenTerm" as const },
+                      ];
+                      patchLoan(loan.id, { prepayments: nextPrepays });
+                    }}
+                  >
+                    ＋ 繰上返済を追加
+                  </Button>
+                </div>
+              </div>
+
             </div>
           </div>
         ))}
